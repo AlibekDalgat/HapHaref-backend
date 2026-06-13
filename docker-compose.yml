@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: hapharef_db
+      POSTGRES_USER: hapharef_admin
+      POSTGRES_PASSWORD: secure_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=True
+      - DB_HOST=db
+      - DB_NAME=hapharef_db
+      - DB_USER=hapharef_admin
+      - DB_PASSWORD=secure_dev_password
+    depends_on:
+      - db
+
+volumes:
+  pg_data:
