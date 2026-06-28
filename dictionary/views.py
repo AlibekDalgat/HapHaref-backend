@@ -1,14 +1,21 @@
 from django.db.models import Q
+from django.http import HttpResponse
 from rest_framework import status as http_status
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from accounts.permissions import CanEditDictionary
 
+from .io_xlsx import export_words_xlsx, import_words_xlsx
 from .models import Root, Word
 from .search import search_words
+
+XLSX_CONTENT_TYPE = (
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
 from .serializers import (
     AdminWordListSerializer,
     RootSerializer,
@@ -125,6 +132,46 @@ class AdminWordViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def reject(self, request, pk=None):
         return self._set_status(request, pk, Word.Status.REJECTED)
+
+    @action(detail=False, methods=["get"])
+    def export(self, request):
+        """Скачать все слова (или с фильтром ?status=) в XLSX."""
+        qs = (
+            Word.objects.all()
+            .select_related("root")
+            .prefetch_related("translations", "examples")
+            .order_by("headword_arabic")
+        )
+        status_param = request.query_params.get("status")
+        if status_param:
+            qs = qs.filter(status=status_param)
+        content = export_words_xlsx(qs)
+        response = HttpResponse(content, content_type=XLSX_CONTENT_TYPE)
+        response["Content-Disposition"] = 'attachment; filename="hapharef_words.xlsx"'
+        return response
+
+    @action(
+        detail=False,
+        methods=["post"],
+        parser_classes=[MultiPartParser, FormParser],
+        url_path="import",
+    )
+    def import_words(self, request):
+        """Загрузить XLSX (поле 'file'); upsert по headword_arabic."""
+        upload = request.FILES.get("file")
+        if not upload:
+            return Response(
+                {"detail": "Файл не передан (ожидается поле 'file')."},
+                status=http_status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            summary = import_words_xlsx(upload, user=request.user)
+        except Exception as exc:  # noqa: BLE001
+            return Response(
+                {"detail": f"Не удалось прочитать файл: {exc}"},
+                status=http_status.HTTP_400_BAD_REQUEST,
+            )
+        return Response(summary)
 
 
 class AdminRootViewSet(viewsets.ModelViewSet):
