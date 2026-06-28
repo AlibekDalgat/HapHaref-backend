@@ -157,6 +157,18 @@ REST_FRAMEWORK = {
         # Session auth keeps the DRF browsable API usable while logged into Django admin.
         "rest_framework.authentication.SessionAuthentication",
     ],
+    "DEFAULT_THROTTLE_RATES": {
+        "login": os.environ.get("THROTTLE_LOGIN", "10/min"),
+        "suggest": os.environ.get("THROTTLE_SUGGEST", "20/hour"),
+    },
+}
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "hapharef_cache",
+    }
 }
 
 

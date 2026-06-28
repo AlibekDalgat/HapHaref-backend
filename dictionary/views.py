@@ -6,8 +6,15 @@ from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 
 from accounts.permissions import CanEditDictionary
+
+
+class SuggestRateThrottle(AnonRateThrottle):
+    """Limit anonymous word suggestions per IP to curb mass spam."""
+
+    scope = "suggest"
 
 from .io_xlsx import export_words_xlsx, import_words_xlsx
 from .models import Root, Word
@@ -65,7 +72,12 @@ class WordViewSet(viewsets.ReadOnlyModelViewSet):
             {"query": query, "count": len(serializer.data), "results": serializer.data}
         )
 
-    @action(detail=False, methods=["post"], permission_classes=[AllowAny])
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[AllowAny],
+        throttle_classes=[SuggestRateThrottle],
+    )
     def suggest(self, request):
         """Public submission of a new word — lands in the moderation queue."""
         serializer = WordSuggestSerializer(data=request.data)
