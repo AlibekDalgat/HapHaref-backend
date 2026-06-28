@@ -90,7 +90,7 @@ class Command(BaseCommand):
                     "definition": item["definition"],
                     "etymology": item["etymology"],
                     "notes": item["notes"],
-                    "is_published": True,
+                    "status": Word.Status.PUBLISHED,
                 },
             )
             if not made:

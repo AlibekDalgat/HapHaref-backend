@@ -5,15 +5,16 @@ from django.db import models
 class User(AbstractUser):
     """Custom user model.
 
-    Authenticated users exist as a first-class entity from day one, but in the
-    MVP only administrators get edit privileges. The ``role`` field is the seam
-    for future tiers (e.g. contributors who submit suggestions for review).
+    Roles (conceptual model):
+      * Суперпользователь — флаг ``is_superuser``: управление словарём (фронт)
+        и техническая Django-админка. Это владелец системы, не значение роли.
+      * Редактор (``role=editor``) — только управление словарём (фронт-панель).
+      * Пользователь (``role=user``) — обычный пользователь (поиск, предложка).
     """
 
     class Role(models.TextChoices):
         USER = "user", "Пользователь"
         EDITOR = "editor", "Редактор"
-        ADMIN = "admin", "Администратор"
 
     role = models.CharField(
         max_length=16,
@@ -27,8 +28,9 @@ class User(AbstractUser):
         verbose_name_plural = "Пользователи"
 
     @property
-    def is_dictionary_admin(self) -> bool:
-        return self.is_superuser or self.role == self.Role.ADMIN
+    def can_edit_dictionary(self) -> bool:
+        """Доступ к управлению словарём: редакторы и суперпользователи."""
+        return self.is_superuser or self.role == self.Role.EDITOR
 
     def __str__(self) -> str:
         return self.get_username()

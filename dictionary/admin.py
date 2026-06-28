@@ -28,10 +28,10 @@ class WordAdmin(admin.ModelAdmin):
         "transliteration_latin",
         "transliteration_cyrillic",
         "part_of_speech",
-        "is_published",
+        "status",
         "updated_at",
     )
-    list_filter = ("part_of_speech", "is_published", "root__origin")
+    list_filter = ("part_of_speech", "status", "root__origin")
     search_fields = (
         "headword_arabic",
         "transliteration_latin",
@@ -51,7 +51,7 @@ class WordAdmin(admin.ModelAdmin):
                 "pronunciation",
                 "part_of_speech",
                 "root",
-                "is_published",
+                "status",
             )
         }),
         ("Энциклопедическая информация", {

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     # Third-party
     "rest_framework",
+    "rest_framework.authtoken",
     "corsheaders",
     "django_filters",
     # Local
@@ -151,6 +152,9 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        # Token auth powers the custom React admin SPA (cross-origin, no cookies).
+        "rest_framework.authentication.TokenAuthentication",
+        # Session auth keeps the DRF browsable API usable while logged into Django admin.
         "rest_framework.authentication.SessionAuthentication",
     ],
 }
@@ -159,6 +163,8 @@ REST_FRAMEWORK = {
 # --- CORS --------------------------------------------------------------------
 
 # Allow the Next.js frontend to call the API during development.
+# Allow the frontend to send cookies (for the shared Django session / SSO).
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = env_list(
     "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
 )

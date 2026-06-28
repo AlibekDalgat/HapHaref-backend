@@ -8,8 +8,14 @@ admin.site.site_header = "HapHaref — администрирование сло
 admin.site.site_title = "HapHaref admin"
 admin.site.index_title = "Управление старотатарским словарём"
 
+admin.site.has_permission = lambda request: bool(
+    getattr(request.user, "is_active", False)
+    and getattr(request.user, "is_superuser", False)
+)
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/auth/", include("accounts.urls")),
     path("api/", include("dictionary.urls")),
 ]
 

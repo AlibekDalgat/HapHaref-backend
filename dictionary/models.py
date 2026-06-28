@@ -61,6 +61,11 @@ class Root(models.Model):
 class Word(models.Model):
     """A single dictionary entry for an Old Tatar word."""
 
+    class Status(models.TextChoices):
+        PENDING = "pending", "На модерации"
+        PUBLISHED = "published", "Опубликовано"
+        REJECTED = "rejected", "Отклонено"
+
     headword_arabic = models.CharField(
         "Слово (арабица, насх)",
         max_length=255,
@@ -96,10 +101,11 @@ class Word(models.Model):
     etymology = models.TextField("Этимология", blank=True)
     notes = models.TextField("Примечания", blank=True)
 
-    is_published = models.BooleanField(
-        "Опубликовано", default=True,
-        help_text="Снимите галочку, чтобы скрыть запись из публичного поиска "
-        "(черновик / предложение на модерации).",
+    status = models.CharField(
+        "Статус", max_length=12,
+        choices=Status.choices, default=Status.PUBLISHED,
+        help_text="Опубликовано — видно в публичном поиске; на модерации — "
+        "предложение пользователя, ожидающее проверки.",
     )
 
     # Denormalized, normalized per-script forms used for typo-tolerant trigram

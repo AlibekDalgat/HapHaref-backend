@@ -33,7 +33,7 @@ def search_words(query: str):
     threshold = SIMILARITY_THRESHOLD if len(normalized) >= 4 else SHORT_QUERY_THRESHOLD
 
     return (
-        Word.objects.filter(is_published=True)
+        Word.objects.filter(status=Word.Status.PUBLISHED)
         .annotate(
             similarity=Greatest(
                 TrigramSimilarity("norm_arabic", normalized),
